@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ahead.distribution.admin.mapper.DistributorMapper">
+
+    <resultMap id="DistributorResultMap" type="Distributor">
+        <id property="id" column="id"/>
+        <result property="userId" column="user_id"/>
+        <result property="levelId" column="level_id"/>
+        <result property="inviteCode" column="invite_code"/>
+        <result property="totalCommission" column="total_commission"/>
+        <result property="withdrawableAmount" column="withdrawable_amount"/>
+        <result property="frozenAmount" column="frozen_amount"/>
+        <result property="totalWithdrawn" column="total_withdrawn"/>
+        <result property="status" column="status"/>
+        <result property="approved" column="approved"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="DistributorResultMap">
+        SELECT d.* FROM distributors d WHERE d.id = #{id}
+    </select>
+
+    <select id="findByUserId" resultMap="DistributorResultMap">
+        SELECT * FROM distributors WHERE user_id = #{userId} LIMIT 1
+    </select>
+
+    <select id="findByInviteCode" resultMap="DistributorResultMap">
+        SELECT * FROM distributors WHERE invite_code = #{inviteCode} LIMIT 1
+    </select>
+
+    <select id="list" resultMap="DistributorResultMap">
+        SELECT d.* FROM distributors d
+        <if test="keyword != null and keyword != ''">
+            LEFT JOIN users u ON d.user_id = u.id
+        </if>
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username LIKE CONCAT('%', #{keyword}, '%')
+                OR u.phone LIKE CONCAT('%', #{keyword}, '%')
+                OR d.invite_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND d.status = #{status}
+            </if>
+        </where>
+        ORDER BY d.id DESC
+        LIMIT #{size} OFFSET #{page}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(d.id) FROM distributors d
+        <if test="keyword != null and keyword != ''">
+            LEFT JOIN users u ON d.user_id = u.id
+        </if>
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (u.username LIKE CONCAT('%', #{keyword}, '%')
+                OR u.phone LIKE CONCAT('%', #{keyword}, '%')
+                OR d.invite_code LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND d.status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO distributors (user_id, level_id, invite_code, total_commission,
+                                  withdrawable_amount, frozen_amount, total_withdrawn,
+                                  status, approved, created_at, updated_at)
+        VALUES (#{userId}, #{levelId}, #{inviteCode}, #{totalCommission},
+                #{withdrawableAmount}, #{frozenAmount}, #{totalWithdrawn},
+                #{status}, #{approved}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE distributors
+        <set>
+            <if test="levelId != null">level_id = #{levelId},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="approved != null">approved = #{approved},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE distributors SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

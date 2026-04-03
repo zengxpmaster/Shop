@@ -1,0 +1,13 @@
+package com.ahead.distribution.admin.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+
+@Data
+@AllArgsConstructor
+public class LoginResponse {
+    private String token;
+    private String username;
+    private Long userId;
+    private Integer userType;
+}

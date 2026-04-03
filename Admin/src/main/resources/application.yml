@@ -1,0 +1,23 @@
+server:
+  port: 8080
+
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/aheadshop?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
+    username: root
+    password: root
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  redis:
+    host: localhost
+    port: 6379
+
+mybatis:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.ahead.distribution.common.entity
+  configuration:
+    map-underscore-to-camel-case: true
+
+jwt:
+  secret: ahead-distribution-shop-secret-key-2026
+  expiration: 7200
+  refresh-expiration: 604800

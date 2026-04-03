@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ahead.distribution.admin.mapper.OrderMapper">
+
+    <resultMap id="OrderResultMap" type="Order">
+        <id property="id" column="id"/>
+        <result property="orderNo" column="order_no"/>
+        <result property="userId" column="user_id"/>
+        <result property="distributorId" column="distributor_id"/>
+        <result property="totalAmount" column="total_amount"/>
+        <result property="payAmount" column="pay_amount"/>
+        <result property="freightAmount" column="freight_amount"/>
+        <result property="discountAmount" column="discount_amount"/>
+        <result property="commissionAmount" column="commission_amount"/>
+        <result property="contactName" column="contact_name"/>
+        <result property="contactPhone" column="contact_phone"/>
+        <result property="province" column="province"/>
+        <result property="city" column="city"/>
+        <result property="district" column="district"/>
+        <result property="address" column="address"/>
+        <result property="remark" column="remark"/>
+        <result property="status" column="status"/>
+        <result property="payStatus" column="pay_status"/>
+        <result property="payType" column="pay_type"/>
+        <result property="paidAt" column="paid_at"/>
+        <result property="shipedAt" column="shiped_at"/>
+        <result property="deliverySn" column="delivery_sn"/>
+        <result property="deliveryCompany" column="delivery_company"/>
+        <result property="receivedAt" column="received_at"/>
+        <result property="confirmedEd" column="confirmed_ed"/>
+        <result property="canceledAt" column="canceled_at"/>
+        <result property="cancelReason" column="cancel_reason"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE id = #{id}
+    </select>
+
+    <select id="findByOrderNo" resultMap="OrderResultMap">
+        SELECT * FROM orders WHERE order_no = #{orderNo} LIMIT 1
+    </select>
+
+    <select id="list" resultMap="OrderResultMap">
+        SELECT * FROM orders
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{size} OFFSET #{page}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM orders
+        <where>
+            <if test="userId != null">
+                AND user_id = #{userId}
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <update id="updateStatus">
+        UPDATE orders
+        <set>
+            status = #{status},
+            <if test="deliverySn != null">delivery_sn = #{deliverySn},</if>
+            <if test="deliveryCompany != null">delivery_company = #{deliveryCompany},</if>
+            updated_at = UNIX_TIMESTAMP()
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO orders (order_no, user_id, distributor_id, total_amount, pay_amount,
+                            freight_amount, discount_amount, commission_amount, contact_name,
+                            contact_phone, province, city, district, address, remark, status,
+                            pay_status, pay_type, created_at, updated_at)
+        VALUES (#{orderNo}, #{userId}, #{distributorId}, #{totalAmount}, #{payAmount},
+                #{freightAmount}, #{discountAmount}, #{commissionAmount}, #{contactName},
+                #{contactPhone}, #{province}, #{city}, #{district}, #{address}, #{remark},
+                #{status}, #{payStatus}, #{payType}, #{createdAt}, #{updatedAt})
+    </insert>
+
+</mapper>
