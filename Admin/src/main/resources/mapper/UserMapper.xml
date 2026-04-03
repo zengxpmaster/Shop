@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ahead.distribution.admin.mapper.UserMapper">
+
+    <resultMap id="UserResultMap" type="User">
+        <id property="id" column="id"/>
+        <result property="username" column="username"/>
+        <result property="password" column="password"/>
+        <result property="phone" column="phone"/>
+        <result property="email" column="email"/>
+        <result property="nickname" column="nickname"/>
+        <result property="avatar" column="avatar"/>
+        <result property="gender" column="gender"/>
+        <result property="status" column="status"/>
+        <result property="userType" column="user_type"/>
+        <result property="lastLoginAt" column="last_login_at"/>
+        <result property="lastLoginIp" column="last_login_ip"/>
+        <result property="createdAt" column="created_at"/>
+        <result property="updatedAt" column="updated_at"/>
+    </resultMap>
+
+    <select id="findById" resultMap="UserResultMap">
+        SELECT * FROM users WHERE id = #{id}
+    </select>
+
+    <select id="findByUsername" resultMap="UserResultMap">
+        SELECT * FROM users WHERE username = #{username} LIMIT 1
+    </select>
+
+    <select id="findByPhone" resultMap="UserResultMap">
+        SELECT * FROM users WHERE phone = #{phone} LIMIT 1
+    </select>
+
+    <select id="list" resultMap="UserResultMap">
+        SELECT * FROM users
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%')
+                OR nickname LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+        ORDER BY id DESC
+        LIMIT #{size} OFFSET #{page}
+    </select>
+
+    <select id="count" resultType="int">
+        SELECT COUNT(*) FROM users
+        <where>
+            <if test="keyword != null and keyword != ''">
+                AND (username LIKE CONCAT('%', #{keyword}, '%')
+                OR phone LIKE CONCAT('%', #{keyword}, '%')
+                OR nickname LIKE CONCAT('%', #{keyword}, '%'))
+            </if>
+            <if test="status != null">
+                AND status = #{status}
+            </if>
+        </where>
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO users (username, password, phone, email, nickname, avatar, gender, status,
+                           user_type, created_at, updated_at)
+        VALUES (#{username}, #{password}, #{phone}, #{email}, #{nickname}, #{avatar}, #{gender},
+                #{status}, #{userType}, #{createdAt}, #{updatedAt})
+    </insert>
+
+    <update id="update">
+        UPDATE users
+        <set>
+            <if test="phone != null">phone = #{phone},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="avatar != null">avatar = #{avatar},</if>
+            <if test="gender != null">gender = #{gender},</if>
+            <if test="status != null">status = #{status},</if>
+            <if test="userType != null">user_type = #{userType},</if>
+            updated_at = #{updatedAt}
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <update id="updateStatus">
+        UPDATE users SET status = #{status} WHERE id = #{id}
+    </update>
+
+</mapper>

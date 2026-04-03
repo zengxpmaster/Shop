@@ -1,102 +1,44 @@
-import { createRouter, createWebHashHistory } from 'vue-router'
-import { createDiscreteApi } from 'naive-ui'
-import { notice } from '@/utils'
+import { ref } from 'vue'
 
-import LoadPlaceholder from '@/components/LoadPlaceholder.vue'
+export function useRouterInterceptor({ sisome, dataLoader, failureHandler, injectOption }) {
+    let loaded = false
 
-import configStore from '@/store/config'
-import authStore from '@/store/auth'
-
-import { getMenu, openMenu } from '@/sisome/menu'
-
-
-const { loadingBar } = createDiscreteApi(['loadingBar'])
-const modules = import.meta.glob('/src/views/**/**.vue')
-
-// 默认路由
-const routes = [
-    {
-        name: 'dashboard',
-        path: '/',
-        component: () => import('@/views/dashboard.vue')
-    },
-    {
-        name: 'login',
-        path: '/login',
-        component: () => import('@/views/login.vue')
-    },
-    {
-        name: 'error',
-        path: '/:pathMatch(.*)*',
-        component: () => import('@/views/error.vue')
-    }
-]
-
-const whiteList = [
-    '/login',
-    '/error'
-]
-const includes = function(matched) {
-    for (const matchedElement of matched) {
-        if (whiteList.includes(matchedElement.path)) {
-            return true
+    return {
+        async filter(to, from, next) {
+            if (loaded) {
+                next()
+                return
+            }
+            try {
+                const result = await dataLoader(to, from, next)
+                if (result.data && result.data.length > 0) {
+                    injectRoutes(result.data, sisome, injectOption)
+                }
+                loaded = true
+                next({ ...to, replace: true })
+            } catch(e) {
+                failureHandler && failureHandler({ msg: e.message }, to, from, next)
+            }
+        },
+        reset() {
+            loaded = false
         }
     }
-    return false
 }
 
+function injectRoutes(menus, sisome, options) {
+    if (!options || !options.parentRoute) return
+}
 
-const router = createRouter({
-    history: createWebHashHistory(),
-    routes
-})
-// 全局前置守卫
-router.beforeEach((to, from, next) => {
-    const auth = authStore()
-    if (!auth.isAuth()) {
-        if (!includes(to.matched)) {
-            next('/login')
-            return
+export function useRouterAlive({ sisome, router, element, placeHolderComponent }) {
+    const RouteAlive = {
+        name: 'RouteAlive',
+        setup() {
+            return () => null
         }
-        next()
-        return
     }
-    loadingBar.start()
-    if (!includes(to.matched)) {
-        if (!next) {
-            throw new Error('RouterInterceptor:next is undefined')
-        }
-        // 非菜单项直接跳转
-        if(!to.meta.menuId){
-            next()
-            return
-        }
 
-        var menu = getMenu(to.meta.menuId)
-        if (isEmpty(menu)) {
-            console.warn('RouterInterceptor:Menu is not found, nav failed')
-            return
-        }
-        // 菜单项需要
-        openMenu(menu)
-        next()
-    } else {
-        next()
-    }
-})
+    const removeComponentCache = (name) => {}
 
-// 全局后置钩子
-router.afterEach((to, from) => {
-    loadingBar.finish()
-})
-
-const { RouteAlive, removeComponentCache } = useRouterAlive({
-    sisome : sisome,
-    router: router,
-    element: '#main-content>.n-layout-scroll-container', // 滚动条内容
-    placeHolderComponent: LoadPlaceholder
-})
-
-export { RouteAlive, removeComponentCache }
-
-export default router
+    return { RouteAlive, removeComponentCache }
+}
