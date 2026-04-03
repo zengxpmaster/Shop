@@ -1,3 +1,5 @@
+import { ref } from 'vue'
+
 const menu = {
     menuTree: ref([]),
     menuMapping: ref({}),

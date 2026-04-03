@@ -1,88 +1,38 @@
 import { createDiscreteApi } from 'naive-ui'
-import { notice } from '@/utils'
-
-import { useRouterInterceptor } from "../sisome/router"
-import sisome from '../sisome'
-import useConfig from '../config'
-import useAuth from '../auth'
-
-
+import authStore from '@/store/auth'
 
 const { loadingBar } = createDiscreteApi(['loadingBar'])
-const modules = import.meta.glob('/src/views/**/**.vue')
 
-// 默认路由
 const routes = [
     {
-        name: 'home',
         path: '/',
-        component: () => import('@/views/home/index.vue')
+        component: () => import('@/views/home/index.vue'),
+        children: [
+            { path: '', redirect: '/dashboard' },
+            { name: 'dashboard', path: '/dashboard', component: () => import('@/views/dashboard.vue') },
+            { name: 'users', path: '/users', component: () => import('@/views/users/index.vue') },
+            { name: 'products', path: '/products', redirect: '/products/list' },
+            { name: 'productList', path: '/products/list', component: () => import('@/views/products/index.vue') },
+            { name: 'productCategories', path: '/products/categories', component: () => import('@/views/products/categories.vue') },
+            { name: 'orders', path: '/orders', component: () => import('@/views/orders/index.vue') },
+            { name: 'distribution', path: '/distribution', redirect: '/distribution/list' },
+            { name: 'distributionList', path: '/distribution/list', component: () => import('@/views/distribution/index.vue') },
+            { name: 'commissions', path: '/distribution/commissions', component: () => import('@/views/distribution/commissions.vue') },
+            { name: 'wallets', path: '/finance/wallets', component: () => import('@/views/finance/wallets.vue') },
+            { name: 'withdrawals', path: '/finance/withdrawals', component: () => import('@/views/finance/withdrawals.vue') },
+            { name: 'settings', path: '/settings', component: () => import('@/views/settings/index.vue') },
+        ]
     },
-    {
-        name: 'login',
-        path: '/login',
-        component: () => import('@/views/login.vue')
-    },
-    {
-        name: 'error',
-        path: '/:pathMatch(.*)*',
-        component: () => import('@/views/error/index.vue')
-    }
+    { name: 'login', path: '/login', component: () => import('@/views/login.vue') },
+    { name: 'error', path: '/:pathMatch(.*)*', component: () => import('@/views/error.vue') }
 ]
 
-const whiteList = [
-    '/login',
-    '/error'
-]
-const includes = function(matched) {
-    for (const matchedElement of matched) {
-        if (whiteList.includes(matchedElement.path)) {
-            return true
-        }
-    }
-    return false
-}
+const whiteList = ['/login', '/error']
 
-// 创建默认的拦截器
-const beforeInterceptor = useRouterInterceptor({
-    sisome: sisome,
-    async dataLoader(to, from, next) {
-        const result = {
-            data: null,
-            msg: ''
-        }
-        const config = useConfig()
-        try {
-            const data = await config.getAuthMenus()
-            result.data = data
-            result.msg = ''
-        } catch (e) {
-            result.menus = null
-            result.msg = 'routes load error'
-        }
-        return result
-    },
-    failureHandler(result, to, from, next) {
-        notice.error(result.msg || '菜单数据加载失败')
-        next && next('/error')
-    },
-    injectOption: {
-        parentRoute: {
-            name: 'home',
-            path: '/',
-            component: () => import('@/views/home/index.vue')
-        },
-        routes: [],
-        viewLoader(view) {
-            console.log(`/src/views${view}`)
-            return modules[`/src/views${view}`]
-        }
-    }
-})
+const includes = (matched) => matched.some(m => whiteList.includes(m.path))
 
-// 前置守卫
 export const beforeEachHandler = (to, from, next) => {
-    const auth = useAuth()
+    const auth = authStore()
     if (!auth.isAuth()) {
         if (!includes(to.matched)) {
             next('/login')
@@ -92,15 +42,10 @@ export const beforeEachHandler = (to, from, next) => {
         return
     }
     loadingBar.start()
-    if (!includes(to.matched)) {
-        beforeInterceptor.filter(to, from, next)
-    } else {
-        next()
-    }
+    next()
 }
 
-// 全局后置钩子
-export const afterEachHandler = (to, from) => {
+export const afterEachHandler = () => {
     loadingBar.finish()
 }
 

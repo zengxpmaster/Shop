@@ -1,5 +1,4 @@
 import { defineStore } from 'pinia'
-
 import { httpGet } from "@/http"
 
 const _DEFAULT = {
@@ -17,23 +16,15 @@ const _DEFAULT = {
 
 const configStore = defineStore('config', {
     state(){
-        return {..._defaultFields}
+        return {..._DEFAULT}
     },
     actions:{
         load(){
             if(this.expired < Date.now() - 60*1000){
                 return
             }
-            // httpGet('option/config').then( res => {
-            //     if(!res.code){
-            //         console.log(res.data)
-            //         this.$state = {...this.$state, ...res.data}
-            //         this.$state.expired = Date.now()
-            //     }
-            // })
         },
         update(){
-            
         },
         toggleMenuCollapsed(){
             this.isMenuCollapsed = !this.isMenuCollapsed
@@ -41,6 +32,14 @@ const configStore = defineStore('config', {
         setMenuCollapsed(val){
             this.isMenuCollapsed = val
         },
+        async getAuthMenus(){
+            try {
+                const res = await httpGet('/api/menus')
+                return res.data || []
+            } catch(e) {
+                return []
+            }
+        }
     },
     persist:{
         key: 'ahead_se_config'
