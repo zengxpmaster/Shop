@@ -3,6 +3,7 @@ package com.ahead.distribution.admin.config;
 import com.ahead.distribution.admin.filter.JwtAuthFilter;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ahead.distribution.common.result.R;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -37,7 +38,7 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
+            .csrf(csrf -> csrf.disable()) // CSRF disabled: stateless JWT-based REST API (no cookie auth)
             .sessionManagement(session ->
                 session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
